@@ -1,57 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
-	"os/exec"
-	"strings"
-
-	codes "github.com/avearmin/stylecodes"
 )
-
-type MessageType int
-
-const (
-	Success MessageType = iota
-	Info
-	Error
-)
-
-var colorMap = map[MessageType]string{
-	Success: codes.ColorGreen,
-	Info:    codes.ColorBlue,
-}
-
-func logMessage(msgType MessageType, msg string) {
-	fmt.Println(colorMap[msgType] + "pwarden: " + msg + codes.ResetColor)
-}
 
 func main() {
-	stdout := strings.Builder{}
-	stderr := strings.Builder{}
-
-	var killList = []string{"Discord"}
-
-	for _, comm := range killList {
-		cmd := exec.Command("killall", "-s", "SIGINT", comm)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
-
-		err := cmd.Run()
-
-		if err != nil {
-			if strings.Contains(stderr.String(), "no process found") {
-				continue
-			}
-
-			log.Fatal(err)
-		}
-
-		logMessage(Success, "detected and closed "+comm)
+	if len(os.Args) < 2 {
+		logMessage(Error, "not enough arguments")
+		os.Exit(1)
 	}
 
+	if command, ok := commandMap[os.Args[1]]; ok {
+		command.callback()
+	} else {
+		logMessage(Error, os.Args[1]+" is not a command")
+		os.Exit(1)
+	}
 	// SEARCH HELPER (abstracts `ps` command)
 	//
 	// stdout := strings.Builder{}

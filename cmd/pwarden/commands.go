@@ -52,9 +52,14 @@ func cmdStart(args []string) error {
 }
 
 func cmdSearch(args []string) error {
-	stdout := strings.Builder{}
+	type process struct {
+		pid  string
+		comm string
+		cmd  string
+	}
 
 	cmd := exec.Command("ps", "-e", "-o", "pid,comm,cmd")
+	stdout := strings.Builder{}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = &stdout
 	cmd.Stderr = os.Stderr
@@ -64,6 +69,7 @@ func cmdSearch(args []string) error {
 		log.Fatal(err)
 	}
 
+	processMatches := []process{}
 	for i, pLine := range strings.Split(stdout.String(), "\n") {
 		if i == 0 || pLine == "" {
 			continue
@@ -71,13 +77,23 @@ func cmdSearch(args []string) error {
 
 		pid := strings.Fields(pLine)[0]
 		comm := strings.Fields(pLine)[1]
-		cmd := strings.Fields(pLine)[2]
+		cmd := strings.Join(strings.Fields(pLine)[2:], " ")
 
-		if strings.Contains(strings.ToLower(comm), strings.ToLower(args[2])) {
-			fmt.Printf("PID: %v, COMM: %v\n", pid, comm)
-			fmt.Printf("CMD: %v\n", cmd)
-			fmt.Println()
+		commLower := strings.ToLower(comm)
+		cmdLower := strings.ToLower(comm)
+		query := strings.ToLower(args[2])
+
+		if strings.Contains(commLower, query) || strings.Contains(cmdLower, query) {
+			processMatches = append(processMatches, process{
+				pid:  pid,
+				comm: comm,
+				cmd:  cmd,
+			})
 		}
+	}
+
+	for i, p := range processMatches {
+		fmt.Printf("%2v: PID: %v, COMM: %v\n", i, p.pid, p.comm)
 	}
 
 	return nil

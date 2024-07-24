@@ -19,12 +19,12 @@ const (
 )
 
 var colorMap = map[MessageType]string{
-	Success: codes.Color.Green,
-	Info:    codes.Color.Blue,
+	Success: codes.ColorGreen,
+	Info:    codes.ColorBlue,
 }
 
 func logMessage(msgType MessageType, msg string) {
-	fmt.Println(colorMap[msgType] + "pwarden: " + msg + codes.Color.Reset)
+	fmt.Println(colorMap[msgType] + "pwarden: " + msg + codes.ResetColor)
 }
 
 func main() {
